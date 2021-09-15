@@ -1,5 +1,0 @@
-Photo,Algorithm,Averaging,BilateralFiltering,BrightnessDecrease,BrightnessIncrease,CropHorizontal,CropVertical,GaussianBlurring,GaussianNoise,Masks,MedianBlurring,Poisson,Rotate,SaltPeper,ScaleDown,ScaleUp,SharpenFiltering,Speckle
-MRI_1,Algo_A,Pass,Pass,Fail,Fail,Pass,Fail,Pass,Fail,Fail,Pass,Pass,Fail,Pass,Fail,Fail,Fail,Fail
-MRI_1,Algo_B,Fail,Fail,Fail,Fail,Fail,Fail,Fail,Fail,Fail,Fail,Fail,Pass,Fail,Pass,Fail,Fail,Fail
-MRI_1,Algo_C,Pass,Fail,Fail,Fail,Pass,Fail,Pass,Fail,Pass,Fail,Pass,Pass,Fail,Pass,Fail,Fail,Fail
-MRI_1,Algo_D,Pass,Pass,Fail,Pass,Pass,Pass,Pass,Pass,Pass,Pass,Pass,Pass,Pass,Fail,Pass,Pass,Pass
