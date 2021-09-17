@@ -308,11 +308,7 @@ def masks(img, output_file_name):
 def init_attack(input_image, image_name):
     print('Attacking ' + image_name)
 
-    a = image_name.split('.')[0]
-    mri_name = a.split('_')[2]+'_'+a.split('_')[3]
-    algo_name = a.split('_')[0]+'_'+a.split('_')[1]
-
-    output_path = os.path.join(testfolder, testattackfolder, algo_name.lower())
+    output_path = os.path.join(testfolder, testattackfolder)
 
     gaussian(input_image, os.path.join(output_path, 'Gaussian_Noise.png'))
     salt_pepper(input_image, os.path.join(output_path, 'Salt_Pepper.png'))
@@ -333,7 +329,174 @@ def init_attack(input_image, image_name):
     masks(input_image, os.path.join(output_path, 'Masks.png'))
     cv2.imwrite(os.path.join(output_path, 'JPG.jpg'), input_image)
 
+    print("Done Attacking.")
+
+def get_img():
+    dir_list = listdir()
+    print("Listing Images in Test Directory")
+    n=1
+    for img in dir_list:
+        print(n,". ", img)
+        n+=1
+    choice = int(input('Please choose the image: >'))
+
+    if choice > len(dir_list) or choice < 0:
+        print("Image does not exist")
+
+    print("Chosen Image: ",dir_list[choice])
+
+    return dir_list[choice]
+
+def get_atk_img(dir_list):
+    print("Listing Images in Test Directory")
+    n=1
+    for img in dir_list:
+        print(n,". ", img)
+        n+=1
+    choice = int(input('Please choose the image: >'))
+
+    if choice > len(dir_list) or choice < 0:
+        print("Image does not exist")
+
+    print("Chosen Image: ",dir_list[choice])
+
+    return dir_list[choice]
+
+def attack_menu():
+    print("Attacking Menu:")
+    print("================")
+    input_path=os.path.join(testfolder,encodeoutputfolder)
+    img_list = listdir(input_path)
+    img = get_atk_img(img_list)
+
+    in_img = cv2.imread(os.path.join(input_path,img))
+
+    init_attack(in_img, img)
+    
+
+def encode_menu():
+    x=0
+    while x != 5: 
+        print("Encoding Watermark Into Images")
+        print("=====================================")
+        print("1. Algorithm A: DWT")
+        print("2. Algorithm B: DWTDCT")
+        print("3. Algorithm C: DWTDCTSVD")
+        print("4. Algorithm C: RivaGan(4char max)")
+        print("5. Exit\n\n")
+
+        x = int(input("Please Input your choice: >"))
+
+        if x == 1:
+            print("Algorithm A: DWT")
+            img = get_img()
+            print("You have chosen :", img)
+            in_text = input("Please enter a text to be encoded into the image: >")
+            encodeA(img,in_text)
+
+        elif x == 2:
+            print("Algorithm B: DWTDCT")
+            img = get_img()
+            print("You have chosen :", img)
+            in_text = input("Please enter a text to be encoded into the image: >")
+            encodeB(img,in_text)
+ 
+        elif x == 3:
+            print("Algorithm C: DWTDCTSVD")
+            img = get_img()
+            print("You have chosen :", img)
+            in_text = input("Please enter a text to be encoded into the image: >")
+            encodeC(img,in_text)
+        elif x == 4:
+            print("Algorithm D: RivaGAN")
+            img = get_img()
+            print("You have chosen :", img)
+            in_text = input("Please enter a text to be encoded into the image(4 char max): >")
+            if len(in_text) <= 4:
+                encodeD(img,in_text)
+            else:
+                print("Exceeded maximum char length")
+        elif x == 5:
+            print("exiting")
+            break
+
+        else:
+            print("Wrong Input.")
+
+def decode_menu():
+    decode_path = os.path.join(testfolder,testattackfolder)
+    img_list=listdir(decode_path)
+
+    x=0
+    while x != 5: 
+        print("Decoding Watermark")
+        print("=====================================")
+        print("1. Algorithm A: DWT")
+        print("2. Algorithm B: DWTDCT")
+        print("3. Algorithm C: DWTDCTSVD")
+        print("4. Algorithm C: RivaGan(4char max)")
+        print("5. Exit\n\n")
+
+        x = int(input("Please Input your choice: >"))
+
+        if x == 1:
+            print("Algorithm A: DWT")
+            decodeA(img_list)
+
+        elif x == 2:
+            print("Algorithm B: DWTDCT")
+            decodeB(img_list)
+ 
+        elif x == 3:
+            print("Algorithm C: DWTDCTSVD")
+            decodeC(img_list)
+
+        elif x == 4:
+            print("Algorithm D: RivaGAN")
+            decodeD(img_list)
+
+        elif x == 5:
+            print("exiting")
+            break
+
+        else:
+            print("Wrong Input.")
+
+def menu():
+    x=0
+    while x != 5: 
+        print("Demo Tools For Invisible Watermarking")
+        print("=====================================")
+        print("1. Encode")
+        print("2. Attack Images")
+        print("3. Decode")
+        print("4. Clear Test")
+        print("5. Exit\n\n")
+
+        x = int(input("Please Input your choice: >"))
+
+        if x == 1:
+            encode_menu()
+        elif x == 2:
+            attack_menu
+        elif x == 3:
+            decode_menu()
+        elif x == 4:
+            clear()
+        elif x == 5:
+            clear()
+            print("exiting")
+            break
+
+        else:
+            print("Wrong Input.")
+
+
 def main():
-    #todo main 
+    menu()
+    print("System stopped.")
+  
+
+
 if __name__ == "__main__":
     main()
