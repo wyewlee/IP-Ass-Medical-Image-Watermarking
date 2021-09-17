@@ -17,7 +17,6 @@ global encodeoutputfolder
 testfolder='test'
 encodeoutputfolder = 'output'
 testattackfolder='attack_output'
-word_length=0
 
 def encodeA(img,text):
     out_name='Algo_A_'+img
@@ -30,6 +29,8 @@ def encodeA(img,text):
     encoder.embed(out_path)
 
     print("Done Encoding Algorithm A (DWT): "+ out_path)
+
+
 
 def encodeB(img,text):
     out_name='Algo_B_'+img
@@ -48,7 +49,7 @@ def encodeB(img,text):
 
     print("Done Encoding Algorithm B (DWTDCT): "+ out_path)
 
-    word_length=len(text)
+
 
 def encodeC(img,text):
     out_name='Algo_C_'+img
@@ -67,7 +68,7 @@ def encodeC(img,text):
 
     print("Done Encoding Algorithm C (DWTDCTSVD): "+ out_path)
 
-    word_length=len(text)
+
 
 def encodeD(img,text):
     out_name='Algo_D_'+img
@@ -89,69 +90,80 @@ def encodeD(img,text):
 
         print("Done Encoding Algorithm D (RivaGAN): "+ out_path)
 
-        word_length=len(text)
+
 
 def listdir(dirpath):        
     img_list=os.listdir(dirpath)
     return img_list
 
 def decodeA(img_list): #pass in list
+    word_length=int(input('Please enter char length expected: >'))
     bytes=(word_length*8)-1
     for img in img_list:
         in_path=os.path.join(testfolder,testattackfolder,img)
         decoder = WaterMark(password_img=1,password_wm=1)
         try:
             output = decoder.extract(in_path, wm_shape=bytes, mode='str')
+            print("Decoded",img,": ", output)
         except:
-            print("Decoded ",img,": ", " Fail due to decode error")
-        print("Decoded ",img,": ", output)
-        print("--------------------------\n")
+            print("Decoded",img,": ", " Fail due to decode error")
+        print("--------------------------")
+    print("--------Finished Decoding---------")
 
 def decodeB(img_list):
-    bytes=word_length*8
+    word_length=int(input('Please enter char length expected: >'))
+    bytes=(word_length*8)
     for img in img_list:
         in_path=os.path.join(testfolder,testattackfolder,img)
-        bgr = cv2.imread(img)
+        bgr = cv2.imread(in_path)
         try:
             decoder = WatermarkDecoder('bytes', bytes)
             watermark = decoder.decode(bgr,'dwtDct')
             output = watermark.decode('utf-8')
+            print("Decoded ",img,": ", output)
         except:
             print("Decoded ",img,": ", " Fail due to decode error")
-        print("Decoded ",img,": ", output)
-        print("--------------------------\n")
-
+        print("--------------------------")
+    print("--------Finished Decoding---------")
 
 def decodeC(img_list):
-    bytes=word_length*8
+    word_length=int(input('Please enter char length expected: >'))
+    bytes=(word_length*8)
     for img in img_list:
         in_path=os.path.join(testfolder,testattackfolder,img)
-        bgr = cv2.imread(img)
+        bgr = cv2.imread(in_path)
         try:
             decoder = WatermarkDecoder('bytes', bytes)
             watermark = decoder.decode(bgr,'dwtDctSvd')
             output = watermark.decode('utf-8')
+            print("Decoded ",img,": ", output)
         except:
             print("Decoded ",img,": ", " Fail due to decode error")
-        print("Decoded ",img,": ", output)
-        print("--------------------------\n")
+        print("--------------------------")
+    print("--------Finished Decoding---------")
 
 def decodeD(img_list):
     for img in img_list:
         in_path=os.path.join(testfolder,testattackfolder,img)
-        bgr = cv2.imread(img)
-        decoder = WatermarkDecoder('bytes', bytes)
+        bgr = cv2.imread(in_path)
+        decoder = WatermarkDecoder('bytes', 32)
         decoder.loadModel()
         try:
             watermark = decoder.decode(bgr,'rivaGan')
             output = watermark.decode('utf-8')
+            print("Decoded ",img,": ", output)
         except:
             print("Decoded ",img,": ", " Fail due to decode error")
-        print("Decoded ",img,": ", output)
-        print("--------------------------\n")
+        print("--------------------------")
+    print("--------Finished Decoding---------")
 
 def clear(): #exit program and purge all test files
     files = glob.glob(os.path.join(testfolder,testattackfolder,'*'))
+    for f in files:
+        os.remove(f)
+        print("Removed ", f)
+
+    files = glob.glob(os.path.join(testfolder,encodeoutputfolder,'*'))
     for f in files:
         os.remove(f)
         print("Removed ", f)
@@ -332,20 +344,23 @@ def init_attack(input_image, image_name):
     print("Done Attacking.")
 
 def get_img():
-    dir_list = listdir()
+    dir_list = listdir(os.path.join(testfolder))
+    final_list=[]
     print("Listing Images in Test Directory")
     n=1
     for img in dir_list:
-        print(n,". ", img)
-        n+=1
+        if img.endswith('.png'):
+            print(n,". ", img)
+            final_list.append(img)
+            n+=1
     choice = int(input('Please choose the image: >'))
 
-    if choice > len(dir_list) or choice < 0:
+    if choice > len(final_list) or choice < 0:
         print("Image does not exist")
 
-    print("Chosen Image: ",dir_list[choice])
+    print("Chosen Image: ",final_list[choice-1])
 
-    return dir_list[choice]
+    return final_list[choice-1]
 
 def get_atk_img(dir_list):
     print("Listing Images in Test Directory")
@@ -358,9 +373,9 @@ def get_atk_img(dir_list):
     if choice > len(dir_list) or choice < 0:
         print("Image does not exist")
 
-    print("Chosen Image: ",dir_list[choice])
+    print("Chosen Image: ",dir_list[choice-1])
 
-    return dir_list[choice]
+    return dir_list[choice-1]
 
 def attack_menu():
     print("Attacking Menu:")
@@ -368,9 +383,7 @@ def attack_menu():
     input_path=os.path.join(testfolder,encodeoutputfolder)
     img_list = listdir(input_path)
     img = get_atk_img(img_list)
-
     in_img = cv2.imread(os.path.join(input_path,img))
-
     init_attack(in_img, img)
     
 
@@ -478,7 +491,7 @@ def menu():
         if x == 1:
             encode_menu()
         elif x == 2:
-            attack_menu
+            attack_menu()
         elif x == 3:
             decode_menu()
         elif x == 4:
