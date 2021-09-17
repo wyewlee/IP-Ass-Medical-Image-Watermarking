@@ -1,43 +1,165 @@
 import cv2
-import cv2
 import os
+import glob
 from skimage.util import random_noise
 from imwatermark import WatermarkEncoder
 from imwatermark import WatermarkDecoder
+from blind_watermark import WaterMark
 import numpy as np
 import random
 import glob
 import pandas as pd
 
+global word_length
+global testfolder
+global testattackfolder
+global encodeoutputfolder
+testfolder='test'
+encodeoutputfolder = 'output'
+testattackfolder='attack_output'
+word_length=0
 
-def encodeA():
+def encodeA(img,text):
+    out_name='Algo_A_'+img
+    out_path=os.path.join(testfolder,encodeoutputfolder,out_name)
+    in_path=os.path.join(testfolder,img)
+
+    encoder = WaterMark(password_img=1, password_wm=1)
+    encoder.read_img(in_path)
+    encoder.read_wm(text,mode='str')
+    encoder.embed(out_path)
+
+    print("Done Encoding Algorithm A (DWT): "+ out_path)
+
+def encodeB(img,text):
+    out_name='Algo_B_'+img
+    out_path=os.path.join(testfolder,encodeoutputfolder,out_name)
+    in_path=os.path.join(testfolder,img)
+
+    encoder = WatermarkEncoder()
+
+    in_img = cv2.imread(in_path)
+
+    encoder.set_watermark('bytes', text.encode('utf-8'))
+
+    img_encoded = encoder.encode(in_img,'dwtDct')
+
+    cv2.imwrite(out_path,img_encoded)
+
+    print("Done Encoding Algorithm B (DWTDCT): "+ out_path)
+
+    word_length=len(text)
+
+def encodeC(img,text):
+    out_name='Algo_C_'+img
+    out_path=os.path.join(testfolder,encodeoutputfolder,out_name)
+    in_path=os.path.join(testfolder,img)
+
+    encoder = WatermarkEncoder()
+
+    in_img = cv2.imread(in_path)
+
+    encoder.set_watermark('bytes', text.encode('utf-8'))
+
+    img_encoded = encoder.encode(in_img,'dwtDctSvd')
+
+    cv2.imwrite(out_path,img_encoded)
+
+    print("Done Encoding Algorithm C (DWTDCTSVD): "+ out_path)
+
+    word_length=len(text)
+
+def encodeD(img,text):
+    out_name='Algo_D_'+img
+    out_path=os.path.join(testfolder,encodeoutputfolder,out_name)
+    in_path=os.path.join(testfolder,img)
+
+    if len(text) > 4 | len(text) <0 :
+        print("Algorithm D(RivaGAN) Support 1-4 char length only.")
+    else:
+        encoder = WatermarkEncoder()
+
+        in_img = cv2.imread(in_path)
+
+        encoder.set_watermark('bytes', text.encode('utf-8'))
+        encoder.loadModel()
+        img_encoded = encoder.encode(in_img,'rivaGan')
+
+        cv2.imwrite(out_path,img_encoded)
+
+        print("Done Encoding Algorithm D (RivaGAN): "+ out_path)
+
+        word_length=len(text)
+
+def listdir(dirpath):        
+    img_list=os.listdir(dirpath)
+    return img_list
+
+def decodeA(img_list): #pass in list
+    bytes=(word_length*8)-1
+    for img in img_list:
+        in_path=os.path.join(testfolder,testattackfolder,img)
+        decoder = WaterMark(password_img=1,password_wm=1)
+        try:
+            output = decoder.extract(in_path, wm_shape=bytes, mode='str')
+        except:
+            print("Decoded ",img,": ", " Fail due to decode error")
+        print("Decoded ",img,": ", output)
+        print("--------------------------\n")
+
+def decodeB(img_list):
+    bytes=word_length*8
+    for img in img_list:
+        in_path=os.path.join(testfolder,testattackfolder,img)
+        bgr = cv2.imread(img)
+        try:
+            decoder = WatermarkDecoder('bytes', bytes)
+            watermark = decoder.decode(bgr,'dwtDct')
+            output = watermark.decode('utf-8')
+        except:
+            print("Decoded ",img,": ", " Fail due to decode error")
+        print("Decoded ",img,": ", output)
+        print("--------------------------\n")
 
 
-def encodeB():
+def decodeC(img_list):
+    bytes=word_length*8
+    for img in img_list:
+        in_path=os.path.join(testfolder,testattackfolder,img)
+        bgr = cv2.imread(img)
+        try:
+            decoder = WatermarkDecoder('bytes', bytes)
+            watermark = decoder.decode(bgr,'dwtDctSvd')
+            output = watermark.decode('utf-8')
+        except:
+            print("Decoded ",img,": ", " Fail due to decode error")
+        print("Decoded ",img,": ", output)
+        print("--------------------------\n")
+
+def decodeD(img_list):
+    for img in img_list:
+        in_path=os.path.join(testfolder,testattackfolder,img)
+        bgr = cv2.imread(img)
+        decoder = WatermarkDecoder('bytes', bytes)
+        decoder.loadModel()
+        try:
+            watermark = decoder.decode(bgr,'rivaGan')
+            output = watermark.decode('utf-8')
+        except:
+            print("Decoded ",img,": ", " Fail due to decode error")
+        print("Decoded ",img,": ", output)
+        print("--------------------------\n")
+
+def clear(): #exit program and purge all test files
+    files = glob.glob(os.path.join(testfolder,testattackfolder,'*'))
+    for f in files:
+        os.remove(f)
+        print("Removed ", f)
+    print("Done clearing all test files.")
 
 
-def encodeC():
-
-
-def encodeD():
-
-
-def decodeA():
-
-
-def decodeB():
-
-
-def decodeC():
-
-
-def decodeD():
-
-
-
-    #####################Attacking Method#############
-
-    # Attacking Methods
+#####################Attacking Method#############
+# Attacking Methods
 
 def gaussian(img, output_file_name):
     img_shape = img.shape
@@ -190,7 +312,7 @@ def init_attack(input_image, image_name):
     mri_name = a.split('_')[2]+'_'+a.split('_')[3]
     algo_name = a.split('_')[0]+'_'+a.split('_')[1]
 
-    output_path = os.path.join('out_att', mri_name, algo_name.lower())
+    output_path = os.path.join(testfolder, testattackfolder, algo_name.lower())
 
     gaussian(input_image, os.path.join(output_path, 'Gaussian_Noise.png'))
     salt_pepper(input_image, os.path.join(output_path, 'Salt_Pepper.png'))
@@ -200,20 +322,18 @@ def init_attack(input_image, image_name):
     upscale(input_image, os.path.join(output_path, 'ScaleUp.png'))
     downscale(input_image, os.path.join(output_path, 'ScaleDown.png'))
     averaging(input_image, os.path.join(output_path, 'Averaging.png'))
-    gaussian_blurring(input_image, os.path.join(
-        output_path, 'Gaussian_Blurring.png'))
-    median_blurring(input_image, os.path.join(
-        output_path, 'Median_Blurring.png'))
-    bilateral_filtering(input_image, os.path.join(
-        output_path, 'Bilateral_Filtering.png'))
-    sharpen_filtering(input_image, os.path.join(
-        output_path, 'Sharpen_Filtering.png'))
-    crop_horizontal(input_image, os.path.join(
-        output_path, 'Crop_Horizontal.png'))
+    gaussian_blurring(input_image, os.path.join(output_path, 'Gaussian_Blurring.png'))
+    median_blurring(input_image, os.path.join(output_path, 'Median_Blurring.png'))
+    bilateral_filtering(input_image, os.path.join(output_path, 'Bilateral_Filtering.png'))
+    sharpen_filtering(input_image, os.path.join(output_path, 'Sharpen_Filtering.png'))
+    crop_horizontal(input_image, os.path.join(output_path, 'Crop_Horizontal.png'))
     crop_vertical(input_image, os.path.join(output_path, 'Crop_Vertical.png'))
-    increase_brightness(input_image, os.path.join(
-        output_path, 'Brightness_Increase.png'))
-    decrease_brightness(input_image, os.path.join(
-        output_path, 'Brightness_Decrease.png'))
+    increase_brightness(input_image, os.path.join(output_path, 'Brightness_Increase.png'))
+    decrease_brightness(input_image, os.path.join(output_path, 'Brightness_Decrease.png'))
     masks(input_image, os.path.join(output_path, 'Masks.png'))
     cv2.imwrite(os.path.join(output_path, 'JPG.jpg'), input_image)
+
+def main():
+    #todo main 
+if __name__ == "__main__":
+    main()
