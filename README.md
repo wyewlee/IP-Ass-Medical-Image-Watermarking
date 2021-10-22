@@ -1,8 +1,10 @@
-# Image Processing Assignment on Invisible Watermarking
+# Medical Image Watermarking (Invisible Watermarking)
 
 ### **A Comparative Study on Medical Image Watermarking using Hybrid Approach and RivaGAN**
 
-*Wong Yew Lee, Loh Jia Cheng, Li Chen Zhen, Tan Chi Wee*
+### ICDXA2021: The 2nd International Conference on Digital Transformation and Applications 
+
+*Yew Lee Wong, Jia Cheng Loh ,Chen Zhen Li, Chi Wee Tan *
 
 *Faculty of Computing and Information Technology, Tunku Abdul Rahman University
 College, Malaysia*
